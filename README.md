@@ -1,2 +1,2 @@
 # MiHsPyFList
-Sort of an finger exercise in Python - several toos for listing files filtered by name/type in a folder and writing information to a CSV file
+Sort of a finger exercise in Python - several tools for listing files filtered by name/type in a folder and writing information to a CSV file
