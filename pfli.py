@@ -17,21 +17,14 @@ import sys
 import csv
 import os
 from datetime import datetime
-import pfllib
 
-# define commandline arguments
-parser = argparse.ArgumentParser(description="List files matching a pattern in a directory and its sub-directories,\n"
-                                             + "and print results including file information to stdout or save as a CSV file")
-parser.add_argument("--recurse", "-r", dest="recurse", action="store_true", default=False,
-                    help="recurse sub-folders")
-parser.add_argument("pattern", nargs="?", default="*.*",
-                    help="only files matching this pattern will be listed")
-parser.add_argument("scandir", nargs="?", default=".",
-                    help="directory to scan for files")
-parser.add_argument("outfile", nargs="?", type=pathlib.Path, default=None,
-                    help="CSV file to write results to [default=stdout]")
+# local imports
+import pfllib.PFLParams as PFLParams
+import pfllib.PFLArgParse as PFLArgParse
 
-# collect commandline arguments
+# define and collect commandline arguments
+parser = PFLArgParse.PFLArgParseWPattern(description="List files matching a pattern in a directory and its sub-directories,\n"
+                                         + "and print results including file information to stdout or save as a CSV file")
 args = parser.parse_args()
 
 # check pattern

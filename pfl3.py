@@ -16,24 +16,16 @@ import pathlib
 import sys
 import pfllib
 
-# 3rd party imports
-
 # local imports
+import pfllib.PFLParams as PFLParams
+import pfllib.PFLArgParse as PFLArgParse
 
-# define commandline arguments
-parser = argparse.ArgumentParser(description="List mp3 files in a directory and its sub-directories\n"
-                                 +"and print results including mp3 tags to stdout or save as a CSV file.")
-parser.add_argument("--recurse", "-r", dest="recurse", action="store_true", default=False,
-                    help="recurse sub-folders")
-parser.add_argument("scandir", nargs="?", default=".",
-                    help="directory to scan for files")
-parser.add_argument("outfile", nargs="?", type=pathlib.Path, default=None,
-                    help="CSV file to write results to [default=stdout]")
-
-# collect commandline arguments
+# define and collect commandline arguments
+parser = PFLArgParse.PFLArgParse(description="List mp3 files in a directory and its sub-directories\n"
+                                 + "and print results including mp3 tags to stdout or save as a CSV file.")
 args = parser.parse_args()
 
 class PFLParamsMP3(PFLParams):
-    def __init__(self, recurse, scandir, outfile):
-        super().__init__(recurse, "*.mp3", scandir, outfile)
+    def __init__(self, recurse, scandir, showdots, outfile):
+        super().__init__(recurse, "*.mp3", scandir, showdots, outfile)
         

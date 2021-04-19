@@ -10,7 +10,6 @@ __date__ = "04/17/2021"
 """
 
 # standard imports
-import argparse
 import pathlib
 import sys
 
@@ -19,5 +18,16 @@ import sys
 # local imports
 
 class PFLRun:
-    def __init__(self):
+    def __init__(self, params):
+        self._Params = params
+    
+    def Run(self):
+        matchingFiles = ScanDir.glob(params.Pattern)
+        
+        # go through the resulting file list and print results to stdout or file
+        for match in matchingFiles:
+            handleMatch(match)
+            
+    def handleMatch(match):
         pass
+    
