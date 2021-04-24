@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2021 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.1"
-__date__ = "04/11/2021"
+__version__ = "0.0.2"
+__date__ = "04/24/2021"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results to stdout or save as a CSV file
@@ -14,60 +14,51 @@ and print results to stdout or save as a CSV file
 import argparse
 import pathlib
 import sys
-import csv
 
 # local imports
 import pfllib.PFLParams as PFLParams
 import pfllib.PFLArgParse as PFLArgParse
+import pfllib.PFLOut as PFLOut
 
+def createPFLOut(params):
+    if params.UseStdOut:
+        return PFLOut.PFLOutStd()
+    else:
+        print("Write results to {}".format(params.OutFilePath))
+        return PFLOut.PFLOutCSV(params.OutFilePath,
+                                ["path","filename"])
+    
 # define and collect commandline arguments
-parser = PFLArgParse.PFLArgParseWPattern(description="List files matching a pattern in a directory and its sub-directories\n"
-                                         +"and print the results to stdout or save as a CSV file.")
+parser = PFLArgParse.PFLArgParseWUserPattern(description="List files matching a pattern in a directory and its sub-directories\n"
+                                             + "and print the results to stdout or save as a CSV file.")
 args = parser.parse_args()
-
-# check / resolve directory to scan
-if args.scandir==".":
-    ScanDir = pathlib.Path.cwd()
-else:
-    if args.scandir.find("*")>=0 or args.scandir.find("?")>=0:
-        print("Invalid wildcards in directory '{0}'!".format(args.scandir))
-        sys.exit(3)
-    ScanDir = pathlib.Path(args.scandir).resolve()
 
 try:
     # create parameter object
-    params = PFLParams.PFLParams(args.pattern, ScanDir, args.recurse, False, args.outfile)
+    params = PFLParams.PFLParams(args.pattern, args.scandir, args.recurse, False, args.outfile)
 
-    # optionally resolve and create output file 
-    if not params.UseStdOut:
-        OutFile = open(pathlib.Path(args.outfile).resolve(), "w", newline="")
-        print("Write results to {}".format(OutFile.name))
-        csvWriter = csv.writer(OutFile, dialect="excel-tab", delimiter=";")
-        csvWriter.writerow(["path", "filename"])
-
+    # optionally resolve and create output file
+    pflOut = createPFLOut(params)
+        
     countFiles = 0
 
-    print("Search for files matching '{0}' in directory '{1}'...".format(params.Pattern, params.ScanDir))
+    print("Search for files matching '{0}' in directory '{1}'...".format(params.Pattern, params.ScanPath))
 
     try:
         # search all matching files
-        matchingFiles = ScanDir.glob(params.Pattern)
+        matchingFiles = params.ScanPath.glob(params.Pattern)
         
         # go through the resulting file list and print results to stdout or file
         for match in matchingFiles:
-            outputColumns = [match.parent,match.name]
-            if params.UseStdOut:
-                print(outputColumns)
-            else:
-                csvWriter.writerow(outputColumns)
-                OutFile.flush()
+            if not match.is_dir():
+                outputColumns = [match.parent,match.name]
+                pflOut.writeMatch(outputColumns)
 
-            countFiles += 1
+                countFiles += 1
             
     finally:
         # close outfile
-        if not params.UseStdOut:
-            OutFile.close()
+        pflOut.close()
             
         if countFiles==0:
             print("Found no matching files.")

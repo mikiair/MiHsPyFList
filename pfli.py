@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2021 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.1"
-__date__ = "04/11/2021"
+__version__ = "0.0.2"
+__date__ = "04/24/2021"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information to stdout or save as a CSV file
@@ -21,82 +21,61 @@ from datetime import datetime
 # local imports
 import pfllib.PFLParams as PFLParams
 import pfllib.PFLArgParse as PFLArgParse
+import pfllib.PFLOut as PFLOut
 
+def createPFLOut(params):
+    if params.UseStdOut:
+        return PFLOut.PFLOutStd()
+    else:
+        print("Write results to {}".format(params.OutFilePath))
+        return PFLOut.PFLOutCSV(params.OutFilePath,
+                                ["path","filename","size","ctime","wtime"])
+    
 # define and collect commandline arguments
-parser = PFLArgParse.PFLArgParseWPattern(description="List files matching a pattern in a directory and its sub-directories,\n"
-                                         + "and print results including file information to stdout or save as a CSV file")
+parser = PFLArgParse.PFLArgParseWUserPattern(description="List files matching a pattern in a directory and its sub-directories,\n"
+                                             + "and print results including file information to stdout or save as a CSV file")
 args = parser.parse_args()
 
-# check pattern
-if args.pattern.find("*")<0 and args.pattern.find("?")<0:
-    print("Pattern without wildcards?!")
-    sys.exit(3)
-    
-# check / resolve directory to scan
-if args.scandir==".":
-    ScanDir = pathlib.Path.cwd()
-else:
-    if args.scandir.find("*")>=0 or args.scandir.find("?")>=0:
-        print("Invalid wildcards in directory '{0}'!".format(args.scandir))
-        sys.exit(3)
-    ScanDir = pathlib.Path(args.scandir).resolve()
-
-if not ScanDir.exists():
-    print("Directory '{0}' does not exist!".format(ScanDir))
-    sys.exit(3)
-
-if not ScanDir.is_dir():
-    print("'{0}' is not a directory!".format(ScanDir))
-    sys.exit(3)
-    
-# check output options    
-UseStdOut = args.outfile is None
-
-# optionally resolve and create output file 
-if not UseStdOut:
-    OutFile = open(pathlib.Path(args.outfile).resolve(), "w", newline="")
-    print("Write results to {}".format(OutFile.name))
-    csvWriter = csv.writer(OutFile, dialect="excel-tab", delimiter=";")
-    csvWriter.writerow(["path", "filename", "filesize", "created", "lastwrite"])
-    
-# get the match pattern
-Pattern = "**/" + args.pattern if args.recurse else args.pattern
-
-countFiles = 0
-fileDateTimeFormat = "%y-%m-%d %H:%M:%S"
-
-print("Search for files matching '{0}' in directory '{1}'...".format(args.pattern, ScanDir))
-
 try:
-    # search all matching files
-    matchingFiles = ScanDir.glob(Pattern)
-    
-    # go through the resulting file list and print results to stdout or file
-    for match in matchingFiles:
-        try:
-            outputColumns = [match.parent,
-                             match.name,
-                             os.path.getsize(match),
-                             datetime.fromtimestamp(os.path.getctime(match)).strftime(fileDateTimeFormat),
-                             datetime.fromtimestamp(os.path.getmtime(match)).strftime(fileDateTimeFormat)]
-        except:
-            outputColumns = [match.parent,
-                             match.name, "", "", ""]
-            
-        if UseStdOut:
-            print(outputColumns)
-        else:
-            csvWriter.writerow(outputColumns)
-            OutFile.flush()
+    # create parameter object
+    params = PFLParams.PFLParams(args.pattern, args.scandir, args.recurse, False, args.outfile)
 
-        countFiles += 1
+    # optionally resolve and create output file 
+    pflOut = createPFLOut(params)
         
-finally:
-    # close outfile
-    if not UseStdOut:
-        OutFile.close()
+    countFiles = 0
+    fileDateTimeFormat = "%y-%m-%d %H:%M:%S"
+
+    print("Search for files matching '{0}' in directory '{1}'...".format(params.Pattern, params.ScanPath))
+
+    try:
+        # search all matching files
+        matchingFiles = params.ScanPath.glob(params.Pattern)
         
-    if countFiles==0:
-        print("Found no matching files.")
-    else:
-        print("Found {0} matching file(s).".format(countFiles))
+        # go through the resulting file list and print results to stdout or file
+        for match in matchingFiles:
+            if not match.is_dir():
+                try:
+                    outputColumns = [match.parent,
+                                     match.name,
+                                     os.path.getsize(match),
+                                     datetime.fromtimestamp(os.path.getctime(match)).strftime(fileDateTimeFormat),
+                                     datetime.fromtimestamp(os.path.getmtime(match)).strftime(fileDateTimeFormat)]
+                except:
+                    outputColumns = [match.parent,
+                                     match.name, "", "", ""]
+                
+                pflOut.writeMatch(outputColumns)
+
+                countFiles += 1
+            
+    finally:
+        # close outfile
+        pflOut.close()
+            
+        if countFiles==0:
+            print("Found no matching files.")
+        else:
+            print("Found {0} matching file(s).".format(countFiles))
+except (BaseException) as e:
+    print(e.args[0])
