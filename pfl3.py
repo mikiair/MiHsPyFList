@@ -4,77 +4,56 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2021 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.1"
-__date__ = "04/24/2021"
+__date__ = "04/25/2021"
 
 """List mp3 files in a directory and its sub-directories,
 and print results including mp3 tags to stdout or save as a CSV file
 """
 
 # standard imports
-import argparse
-import pathlib
-import sys
-import pfllib
+
+# 3rd party imports
+from tinytag import TinyTag
 
 # local imports
 import pfllib.PFLParams as PFLParams
 import pfllib.PFLArgParse as PFLArgParse
-import pfllib.PFLOut as PFLOut
+import pfllib.PFLRun as PFLRun
 
-def createPFLOut(params):
-    if params.UseStdOut:
-        return PFLOut.PFLOutStd()
-    else:
-        print("Write results to {}".format(params.OutFilePath))
-        return PFLOut.PFLOutCSV(params.OutFilePath,
-                                ["path","filename","length","interpret","album","titleno","title","year"])
-
-class PFLParamsMP3(PFLParams):
-    def __init__(self, scandir, recurse, showdots, outfile):
-        super().__init__("*.mp3", scandir, recurse, showdots, outfile)
+class PFLRunMP3(PFLRun.PFLRun):
+    def __init__(self, params):
+        super().__init__(params)
+        self.ColumnHeader = ["path", "filename", "length", "bitrate", "artist", "album", "track", "title", "year"]
+        
+    def handleMatch(self, match):
+        try:
+            tag = TinyTag.get(match)
+            return [match.parent, match.name,
+                    round(tag.duration,3), tag.bitrate,
+                    tag.artist, "" if tag.album is None else tag.album.strip(),
+                    tag.track, tag.title, tag.year]
+        except:
+            return [match.parent, match.name,
+                    "", "", "", "", "", "" , ""]
+            
+class PFLParamsMP3(PFLParams.PFLParams):
+    def __init__(self, scandir, recurse, outfile, outexistsmode, nodots):
+        super().__init__("*.mp3", scandir, recurse, outfile, outexistsmode, nodots)
         
 # define and collect commandline arguments
-parser = PFLArgParse.PFLArgParse(description="List mp3 files in a directory and its sub-directories\n"
-                                 + "and print results including mp3 tags to stdout or save as a CSV file.")
+parser = PFLArgParse.PFLArgParseFixedPattern(description="List mp3 files in a directory and its sub-directories\n"
+                                             + "and print results including mp3 tags to stdout or save as a CSV file.")
 args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParams.PFLParamsMP3(args.scandir, args.recurse, False, args.outfile)
-
-    # optionally resolve and create output file 
-    pflOut = createPFLOut(params)
-        
-    countFiles = 0
-    fileDateTimeFormat = "%y-%m-%d %H:%M:%S"
+    params = PFLParamsMP3(args.scandir, args.recurse, args.outfile,
+                          args.overwrite + args.append, args.nodots)
 
     print("Search for mp3 files in directory '{}'...".format(params.ScanPath))
 
-    try:
-        # search all matching files
-        matchingFiles = params.ScanPath.glob(params.Pattern)
-        
-        # go through the resulting file list and print results to stdout or file
-        for match in matchingFiles:
-            if not match.is_dir():
-                try:
-                    outputColumns = [match.parent,
-                                     match.name]
-                except:
-                    outputColumns = [match.parent,
-                                     match.name]
-                
-                pflOut.writeMatch(outputColumns)
-
-                countFiles += 1
-            
-    finally:
-        # close outfile
-        pflOut.close()
-            
-        if countFiles==0:
-            print("Found no matching files.")
-        else:
-            print("Found {0} matching file(s).".format(countFiles))
-except (BaseException) as e:
-    print(e.args[0])
+    run = PFLRunMP3(params)
+    
+    run.Run()
+except (Exception) as e:
+    print("Unhandled error:", e.args[0])

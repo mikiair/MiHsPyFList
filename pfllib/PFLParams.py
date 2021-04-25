@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2021 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.2"
-__date__ = "04/24/2021"
+__date__ = "04/25/2021"
 
 """Class PFLParams defines a set of parameters used for searching files:
 a match pattern, a directory to scan, option to recurse into sub-folders, and a file for result output,
@@ -19,13 +19,14 @@ import pathlib
 # local imports
 
 class PFLParams:
-    def __init__(self, pattern, scandir, recurse, showdots, outfile):
+    def __init__(self, pattern, scandir, recurse, outfile, outexistsmode, nodots):
         self._Pattern = pattern
         self._ScanDir = scandir
         self._Recurse = recurse
         self._OutFile = outfile
         self._UseStdOut = outfile is None
-        self._ShowDots = showdots
+        self._OutExistsMode = outexistsmode
+        self._ShowDots = outfile is not None and not nodots
         self.IsValid()
 
     def getPattern(self, doc="The glob-usable match pattern for the files to search for"):
@@ -48,7 +49,11 @@ class PFLParams:
         return self._UseStdOut
     UseStdOut = property(getUseStdOut)
     
-    def getShowDots(self, doc="If true, stdout will display a dot for each matching file"):
+    def getOutExistsMode(self, doc="Defines the way an existing outfile will be handled"):
+        return self._OutExistsMode
+    OutExistsMode = property(getOutExistsMode)
+    
+    def getShowDots(self, doc="If true, stdout will display a dot for each matching file (when writing to file)"):
         return self._ShowDots
     ShowDots = property(getShowDots)
 
