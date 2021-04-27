@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2021 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.1"
-__date__ = "04/25/2021"
+__version__ = "0.0.2"
+__date__ = "04/27/2021"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files, handling each match by a virtual method
@@ -13,6 +13,7 @@ It takes an PFLParams object and performs a search for files, handling each matc
 # standard imports
 import pathlib
 import sys
+import glob
 
 # local imports
 import pfllib.PFLOut as PFLOut
@@ -33,20 +34,33 @@ class PFLRun:
         self._columnHeader = columnHeader
     ColumnHeader = property(getColumnHeader, setColumnHeader)
     
-    def Run(self):
+    def Run(self, immediate=True):
         self.createPFLOut()
         
         self._countFiles = 0
 
         try:
-            matchingFiles = self._Params.ScanPath.glob(self._Params.Pattern)
-            
-            # go through the resulting file list and print results to stdout or file
-            for match in matchingFiles:
-                if not match.is_dir():
-                    outputColumns = self.handleMatch(match)
-                    self._pflOut.writeMatch(outputColumns)
-                    self._countFiles += 1
+            if immediate:
+                # use glob iterator to immediately handle results (does not return folders starting with dot!)
+                matchingFiles = glob.iglob(f"{self._Params.ScanPath}/{self._Params.Pattern}",
+                                           recursive=True if self._Params.Pattern.find("**") >= 0 else False)
+                
+                # go through the resulting file list and print results to stdout or file
+                for match in matchingFiles:
+                    matchPath = pathlib.Path(match)
+                    if matchPath.is_file():
+                        outputColumns = self.handleMatch(matchPath)
+                        self._pflOut.writeMatch(outputColumns)
+                        self._countFiles += 1
+            else:
+                matchingFiles = self._Params.ScanPath.glob(self._Params.Pattern)
+                
+                # go through the resulting file list and print results to stdout or file
+                for match in matchingFiles:
+                    if match.is_file():
+                        outputColumns = self.handleMatch(match)
+                        self._pflOut.writeMatch(outputColumns)
+                        self._countFiles += 1
         finally:
             # close outfile
             self._pflOut.close()
