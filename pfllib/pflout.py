@@ -20,7 +20,7 @@ class PFLOut:
     def openout(self, mode):
         pass
 
-    def writeMatch(self, outputColumns):
+    def writeMatch(self, formattedList):
         pass
 
     def close(self):
@@ -31,25 +31,24 @@ class PFLOutStd(PFLOut):
     def __init__(self):
         pass
 
-    def writeMatch(self, outputColumns):
-        print(outputColumns)
+    def writeMatch(self, formattedList):
+        print(formattedList)
 
 
 class PFLOutCSV(PFLOut):
-    def __init__(self, filePath, outexistsmode, colheader, showdots):
+    def __init__(self, filePath, columnNames, showdots):
         self._filePath = filePath
-        self._outexistsmode = outexistsmode
-        self._colheader = colheader
+        self._columnNames = columnNames
         self._showDots = showdots
 
     def openout(self, mode):
         self._outFile = open(self._filePath, mode, newline="")
         self._csvWriter = csv.writer(self._outFile, dialect="excel-tab", delimiter=";")
-        self._csvWriter.writerow(self._colheader)
+        self._csvWriter.writerow(self._columnNames)
 
-    def writeMatch(self, outputColumns):
+    def writeMatch(self, formattedList):
         try:
-            self._csvWriter.writerow(outputColumns)
+            self._csvWriter.writerow(formattedList)
         except (Exception):
             # handle invalid chars or invalidly encoded chars
             self._csvWriter.writerow(["Error in output encoding!"])

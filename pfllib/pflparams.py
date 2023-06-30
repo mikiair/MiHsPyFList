@@ -14,10 +14,6 @@ and a file for result output, and additional attribute for stdout usage.
 # standard imports
 import pathlib
 
-# 3rd party imports
-
-# local imports
-
 
 class PFLParams:
     """Class PFLParams defines a set of parameters used for searching files:
@@ -31,6 +27,10 @@ class PFLParams:
         self._Recurse = recurse
         self._OutFile = outfile
         self._UseStdOut = outfile is None
+        if not self._UseStdOut:
+            self._OutFileType = 0 if str(outfile).lower().endswith(".csv") else 1
+        else:
+            self._OutFileType = None
         self._OutExistsMode = outexistsmode
         self._ShowDots = outfile is not None and not nodots
         self.IsValid()
@@ -62,6 +62,11 @@ class PFLParams:
 
     UseStdOut = property(getUseStdOut)
 
+    def getOutFileType(self, doc="Return the file type used for output"):
+        return self._OutFileType
+
+    OutFileType = property(getOutFileType)
+
     def getOutExistsMode(
         self, doc="Defines the way an existing outfile will be handled"
     ):
@@ -78,6 +83,7 @@ class PFLParams:
     ShowDots = property(getShowDots)
 
     def IsValid(self):
+        """Check the parameters and raise exception on any invalid."""
         if self._Pattern.find("*") < 0 and self._Pattern.find("?") < 0:
             raise ValueError("Pattern without wildcards?!")
 

@@ -11,33 +11,34 @@ and print results to stdout, save as a CSV file or write to a sqlite3 database.
 """
 
 # local imports
-import pfllib.PFLArgParse as PFLArgParse
-import pfllib.PFLParams as PFLParams
-import pfllib.PFLRun as PFLRun
+import pfllib.pflargparse as pflargparse
+import pfllib.pflparams as pflparams
+import pfllib.pflrun as pflrun
 
 
-class PFLRunFileName(PFLRun.PFLRun):
+class PFLRunFileName(pflrun.PFLRun):
     """Derived class for scanning and storage of file path and name."""
 
     def __init__(self, params):
         super().__init__(params)
-        self.ColumnHeader = ["path", "filename"]
+        self.Columns = ["path", "filename"]
 
-    def handleMatch(self, match):
+    def getMatchDataList(self, match):
+        """Return list with data from the match."""
         return [match.parent, match.name]
 
 
 # define and collect commandline arguments
 # (kept outside try-catch block to leave exception messages untouched)
-parser = PFLArgParse.PFLArgParseWUserPattern(
+parser = pflargparse.PFLArgParseWUserPattern(
     description="List files matching a pattern in a directory and its sub-directories\n"
-    + "and print the results to stdout or save as a CSV file."
+    + "and print the results to stdout, or save as a CSV or database file."
 )
 args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParams.PFLParams(
+    params = pflparams.PFLParams(
         args.pattern,
         args.scandir,
         args.recurse,

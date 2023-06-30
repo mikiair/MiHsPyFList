@@ -46,16 +46,16 @@ class PFLArgParseOptionalPattern(ArgumentParser):
             nargs="?",
             type=pathlib.Path,
             default=None,
-            help="CSV file to write results to [default=stdout]",
+            help="CSV or database file to write results to [default=stdout]",
         )
 
-        csvopt_group = self.add_argument_group(
-            "CSV file options",
-            "optional arguments apply when writing to CSV file "
+        fileopt_group = self.add_argument_group(
+            "file options",
+            "optional arguments apply when writing to CSV or database file"
             + "(ignored otherwise)",
         )
 
-        existmode_group = csvopt_group.add_mutually_exclusive_group()
+        existmode_group = fileopt_group.add_mutually_exclusive_group()
 
         existmode_group.add_argument(
             "-o",
@@ -76,7 +76,7 @@ class PFLArgParseOptionalPattern(ArgumentParser):
             help="append to the outfile if existent",
         )
 
-        csvopt_group.add_argument(
+        fileopt_group.add_argument(
             "-n",
             "--nodots",
             dest="nodots",

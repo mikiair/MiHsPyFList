@@ -15,47 +15,65 @@ import os
 from datetime import datetime
 
 # local imports
-import pfllib.PFLArgParse as PFLArgParse
-import pfllib.PFLParams as PFLParams
-import pfllib.PFLRun as PFLRun
+import pfllib.pflargparse as pflargparse
+import pfllib.pflparams as pflparams
+import pfllib.pflrun as pflrun
 
 
-class PFLRunFileInfo(PFLRun.PFLRun):
+class PFLRunFileInfo(pflrun.PFLRun):
     """Derived class for scanning and storage of file information."""
 
     def __init__(self, params):
         super().__init__(params)
-        self.ColumnHeader = ["path", "filename", "size", "ctime", "wtime"]
+        self.Columns = ["path", "filename", "size", "ctime", "wtime"]
         self._fileDateTimeFormat = "%Y-%m-%d %H:%M:%S"
 
-    def handleMatch(self, match):
+    def getMatchDataList(self, match):
+        """Return list with data from the match."""
         try:
             return [
                 match.parent,
                 match.name,
                 os.path.getsize(match),
-                datetime.fromtimestamp(os.path.getctime(match)).strftime(
-                    self._fileDateTimeFormat
-                ),
-                datetime.fromtimestamp(os.path.getmtime(match)).strftime(
-                    self._fileDateTimeFormat
-                ),
+                datetime.fromtimestamp(os.path.getctime(match)),
+                datetime.fromtimestamp(os.path.getmtime(match)),
             ]
         except Exception:
-            return [match.parent, match.name, "", "", ""]
+            return [match.parent, match.name, -1, None, None]
+
+    def formatListStrings(self, dataList):
+        """Return all elements in the list formatted as strings."""
+        return [
+            str(dataList[0]),
+            str(dataList[1]),
+            str(dataList[2]),
+            dataList[3].strftime(self._fileDateTimeFormat),
+            dataList[4].strftime(self._fileDateTimeFormat),
+        ]
+
+    def formatListDatabase(self, dataList):
+        """Return all elements in the list converted to types suitable for database."""
+        return [
+            str(dataList[0]),
+            str(dataList[1]),
+            dataList[2],
+            dataList[3],
+            dataList[4],
+        ]
 
 
 # define and collect commandline arguments
 # (kept outside try-catch block to leave exception messages untouched)
-parser = PFLArgParse.PFLArgParseWUserPattern(
+parser = pflargparse.PFLArgParseWUserPattern(
     description="List files matching a pattern in a directory and its sub-directories,\n"
-    + "and print results including file information to stdout or save as a CSV file"
+    + "and print results including file information to stdout,\n"
+    + "or save as a CSV or database file."
 )
 args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParams.PFLParams(
+    params = pflparams.PFLParams(
         args.pattern,
         args.scandir,
         args.recurse,
