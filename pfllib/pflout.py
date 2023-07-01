@@ -50,10 +50,11 @@ class PFLOutStd(PFLOut):
 
 class PFLOutFile(PFLOut):
     """Class for result output to a file."""
-    
+
     def __init__(self, filePath, columnNames):
         self._filePath = filePath
         self._columnNames = columnNames
+
 
 class PFLOutCSV(PFLOutFile):
     """Class for result output to CSV file."""
