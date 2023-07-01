@@ -16,7 +16,7 @@ import sqlite3
 import pfllib.pflout as pflout
 
 
-class PFLOutSqlite(pflout.PFLOut):
+class PFLOutSqlite(pflout.PFLOutFile):
     """Class handles output of matching file search results to SQLite database."""
 
     def __init__(self, filePath, columnNames):

@@ -48,12 +48,18 @@ class PFLOutStd(PFLOut):
             print("\t" + formattedList[1])
 
 
-class PFLOutCSV(PFLOut):
-    """Class for result output to CSV file."""
-
+class PFLOutFile(PFLOut):
+    """Class for result output to a file."""
+    
     def __init__(self, filePath, columnNames):
         self._filePath = filePath
         self._columnNames = columnNames
+
+class PFLOutCSV(PFLOutFile):
+    """Class for result output to CSV file."""
+
+    def __init__(self, filePath, columnNames):
+        super().__init(filePath, columnNames)
 
     def openout(self, mode):
         self._outFile = open(self._filePath, mode, newline="")
