@@ -4,9 +4,9 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.2"
-__date__ = "06/30/2023"
+__date__ = "07/01/2023"
 
-"""Classes in PFLOut handle the output to stdout or to a CSV writer file
+"""Classes in pflout handle the output to stdout or to a CSV writer file
 """
 
 # standard imports
@@ -14,6 +14,8 @@ import csv
 
 
 class PFLOut:
+    """Abstract base class for result output."""
+
     def __init__(self):
         pass
 
@@ -28,18 +30,30 @@ class PFLOut:
 
 
 class PFLOutStd(PFLOut):
+    """Class for result output to stdout."""
+
     def __init__(self):
-        pass
+        self._currentFolder = ""
 
     def writeMatch(self, formattedList):
-        print(formattedList)
+        """Print file data to stdout. If file is from next folder first print the
+        folder name in a separate line.
+        """
+        if not formattedList[0] == self._currentFolder:
+            self._currentFolder = formattedList[0]
+            print(self._currentFolder + ":")
+        if len(formattedList) > 2:
+            print("\t" + formattedList[1] + " - " + "/".join(formattedList[2:]))
+        else:
+            print("\t" + formattedList[1])
 
 
 class PFLOutCSV(PFLOut):
-    def __init__(self, filePath, columnNames, showdots):
+    """Class for result output to CSV file."""
+
+    def __init__(self, filePath, columnNames):
         self._filePath = filePath
         self._columnNames = columnNames
-        self._showDots = showdots
 
     def openout(self, mode):
         self._outFile = open(self._filePath, mode, newline="")
@@ -47,16 +61,13 @@ class PFLOutCSV(PFLOut):
         self._csvWriter.writerow(self._columnNames)
 
     def writeMatch(self, formattedList):
+        """Write result data as a new line into CSV file."""
         try:
             self._csvWriter.writerow(formattedList)
         except (Exception):
             # handle invalid chars or invalidly encoded chars
             self._csvWriter.writerow(["Error in output encoding!"])
         self._outFile.flush()
-        if self._showDots:
-            print(".", end="")
 
     def close(self):
         self._outFile.close()
-        if self._showDots:
-            print("")

@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.4"
-__date__ = "06/30/2022"
+__date__ = "07/01/2022"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information to stdout or save as a CSV file
@@ -47,8 +47,12 @@ class PFLRunFileInfo(pflrun.PFLRun):
             str(dataList[0]),
             str(dataList[1]),
             str(dataList[2]),
-            dataList[3].strftime(self._fileDateTimeFormat),
-            dataList[4].strftime(self._fileDateTimeFormat),
+            dataList[3].strftime(self._fileDateTimeFormat)
+            if dataList[3] is not None
+            else "",
+            dataList[4].strftime(self._fileDateTimeFormat)
+            if dataList[4] is not None
+            else "",
         ]
 
     def formatListDatabase(self, dataList):
@@ -80,6 +84,7 @@ try:
         args.outfile,
         args.overwrite + args.append,
         args.nodots,
+        args.dots,
     )
 
     print(

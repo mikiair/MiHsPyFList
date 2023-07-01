@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.3"
-__date__ = "06/30/2023"
+__date__ = "07/01/2023"
 
 """List mp3 files in a directory and its sub-directories,
 and print results including mp3 tags to stdout or save as a CSV file.
@@ -61,29 +61,33 @@ class PFLRunMP3(pflrun.PFLRun):
                 datetime.fromtimestamp(os.path.getmtime(match)),
                 round(tag.duration, 3),
                 round(tag.bitrate, 0),
-                tag.artist,
+                "" if tag.artist is None else tag.artist.strip(),
                 "" if tag.album is None else tag.album.strip(),
                 tag.track,
                 tag.title,
                 tag.year,
             ]
         except (Exception):
-            return [match.parent, match.name, None, None, 0, 0, "", "", 0, "", -1]
+            return [match.parent, match.name, None, None, 0, 0, "", "", "0", "", "-1"]
 
     def formatListStrings(self, dataList):
         """Return all elements in the list formatted as strings."""
         return [
             str(dataList[0]),
             str(dataList[1]),
-            dataList[2].strftime(self._fileDateTimeFormat),
-            dataList[3].strftime(self._fileDateTimeFormat),
+            dataList[2].strftime(self._fileDateTimeFormat)
+            if dataList[2] is not None
+            else "",
+            dataList[3].strftime(self._fileDateTimeFormat)
+            if dataList[3] is not None
+            else "",
             str(dataList[4]),
             str(dataList[5]),
             dataList[6],
             dataList[7],
-            str(dataList[8]),
+            dataList[8],
             dataList[9],
-            str(dataList[10]),
+            dataList[10],
         ]
 
     def formatListDatabase(self, dataList):
@@ -97,9 +101,9 @@ class PFLRunMP3(pflrun.PFLRun):
             dataList[5],
             dataList[6],
             dataList[7],
-            dataList[8],
+            int((dataList[8].strip() or 0) if dataList[8] is not None else 0),
             dataList[9],
-            dataList[10],
+            int((dataList[10].strip() or -1) if dataList[10] is not None else -1),
         ]
 
 
@@ -120,6 +124,7 @@ try:
         args.outfile,
         args.overwrite + args.append,
         args.nodots,
+        args.dots,
     )
 
     print("Search for mp3 files in directory '{}'...".format(params.ScanPath))

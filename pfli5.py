@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.1"
-__date__ = "06/30/2022"
+__date__ = "07/01/2022"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information (with MD5 hash)
@@ -47,7 +47,7 @@ class PFLRunFileInfoWithMD5(pflrun.PFLRun):
 
     def md5(self, filename, blocksize=65536):
         """Return the MD5 hash of the file."""
-        hashmd5 = hashlib.md5()                      # create a new object for each file!
+        hashmd5 = hashlib.md5()  # create a new object for each file!
         with open(filename, "rb") as f:
             for block in iter(lambda: f.read(blocksize), b""):
                 hashmd5.update(block)
@@ -60,8 +60,12 @@ class PFLRunFileInfoWithMD5(pflrun.PFLRun):
             str(dataList[0]),
             str(dataList[1]),
             str(dataList[2]),
-            dataList[3].strftime(self._fileDateTimeFormat),
-            dataList[4].strftime(self._fileDateTimeFormat),
+            dataList[3].strftime(self._fileDateTimeFormat)
+            if dataList[3] is not None
+            else "",
+            dataList[4].strftime(self._fileDateTimeFormat)
+            if dataList[4] is not None
+            else "",
             dataList[5].hex(),
         ]
 
@@ -95,6 +99,7 @@ try:
         args.outfile,
         args.overwrite + args.append,
         args.nodots,
+        args.dots,
     )
 
     print(

@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.3"
-__date__ = "06/30/2023"
+__date__ = "07/01/2023"
 
 """Class PFLParams defines a set of parameters used for searching files:
 a match pattern, a directory to scan, option to recurse into sub-folders,
@@ -21,7 +21,7 @@ class PFLParams:
     and a file for result output, and additional attribute for stdout usage.
     """
 
-    def __init__(self, pattern, scandir, recurse, outfile, outexistsmode, nodots):
+    def __init__(self, pattern, scandir, recurse, outfile, outexistsmode, nodots, dots):
         self._Pattern = pattern
         self._ScanDir = scandir
         self._Recurse = recurse
@@ -32,7 +32,11 @@ class PFLParams:
         else:
             self._OutFileType = None
         self._OutExistsMode = outexistsmode
-        self._ShowDots = outfile is not None and not nodots
+        self._ShowDots = not self._UseStdOut and not nodots
+        if self._ShowDots:
+            self._FilesPerDot = pow(10, dots)
+        else:
+            self._FilesPerDot = 0
         self.IsValid()
 
     def getPattern(
@@ -81,6 +85,14 @@ class PFLParams:
         return self._ShowDots
 
     ShowDots = property(getShowDots)
+
+    def getFilesPerDot(
+        self,
+        doc="Return number of files to scan until a dot is printed",
+    ):
+        return self._FilesPerDot
+
+    FilesPerDot = property(getFilesPerDot)
 
     def IsValid(self):
         """Check the parameters and raise exception on any invalid."""

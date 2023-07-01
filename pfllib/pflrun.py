@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.3"
-__date__ = "06/30/2023"
+__date__ = "07/01/2023"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files,
@@ -19,6 +19,8 @@ import sys
 # local imports
 import pfllib.pflout as pflout
 import pfllib.pfloutsqlite as pfloutsqlite
+
+# import time
 
 
 class PFLRun:
@@ -47,6 +49,8 @@ class PFLRun:
 
     def Run(self, immediate=True):
         """Run the file search."""
+        # startTime = time.time()
+
         self.createpflout()
 
         self._countFiles = 0
@@ -54,7 +58,7 @@ class PFLRun:
         try:
             if immediate:
                 # use glob iterator to immediately handle results
-                # (does not return folders starting with dot!)
+                # (does not return folders and files starting with dot!)
                 matchingFiles = glob.iglob(
                     f"{self._params.ScanPath}/{self._params.Pattern}",
                     recursive=True if self._params.Pattern.find("**") >= 0 else False,
@@ -63,27 +67,46 @@ class PFLRun:
                 # go through the resulting file list and print results to stdout or file
                 for match in matchingFiles:
                     matchPath = pathlib.Path(match)
-                    if matchPath.is_file():
+                    if (
+                        matchPath.is_file()
+                        and str(matchPath).find("$RECYCLE.BIN") == -1
+                    ):
                         matchDataList = self.getMatchDataList(matchPath)
                         self._pflout.writeMatch(self._formatMatchList(matchDataList))
                         self._countFiles += 1
+                        if (
+                            self._params.ShowDots
+                            and self._countFiles % self._params.FilesPerDot == 0
+                        ):
+                            print(".", end="")
             else:
                 matchingFiles = self._params.ScanPath.glob(self._params.Pattern)
 
                 # go through the resulting file list and print results to stdout or file
                 for match in matchingFiles:
-                    if match.is_file():
+                    if match.is_file() and str(match).find("$RECYCLE.BIN") == -1:
                         matchDataList = self.getMatchDataList(match)
                         self._pflout.writeMatch(self._formatMatchList(matchDataList))
                         self._countFiles += 1
+                        if (
+                            self._params.ShowDots
+                            and self._countFiles % self._params.FilesPerDot == 0
+                        ):
+                            print(".", end="")
         finally:
             # close outfile
             self._pflout.close()
+
+            if self._params.ShowDots:
+                if self._countFiles < self._params.FilesPerDot:
+                    print(".", end="")
+                print("")
 
             if self._countFiles == 0:
                 print("Found no matching files.")
             else:
                 print("Found {0} matching file(s).".format(self._countFiles))
+            # print("Took {0:.2f} seconds.".format(time.time() - startTime))
 
     def getMatchDataList(self, match):
         """Return list with data from the match."""
@@ -108,14 +131,12 @@ class PFLRun:
                 self._pflout = pfloutsqlite.PFLOutSqlite(
                     self._params.OutFilePath,
                     self._columns,
-                    self._params.ShowDots,
                 )
                 self._formatMatchList = self.formatListDatabase
             else:
                 self._pflout = pflout.PFLOutCSV(
                     self._params.OutFilePath,
                     self._columns,
-                    self._params.ShowDots,
                 )
                 self._formatMatchList = self.formatListStrings
 

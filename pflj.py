@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.2"
-__date__ = "06/30/2023"
+__date__ = "07/01/2023"
 
 """List jpg files in a directory and its sub-directories,
 and print results including jpg tags to stdout or save as a CSV file
@@ -14,13 +14,14 @@ and print results including jpg tags to stdout or save as a CSV file
 import os
 from datetime import datetime
 
+# 3rd party imports
+from PIL import Image
+
 # local imports
 import pfllib.pflargparse as pflargparse
 import pfllib.pflparams as pflparams
 import pfllib.pflrun as pflrun
 
-# 3rd party imports
-# from PIL import Image
 # from exif import Image as imgEXIF
 
 
@@ -36,7 +37,7 @@ class PFLRunJPG(pflrun.PFLRun):
 
     def __init__(self, params):
         super().__init__(params)
-        self.ColumnHeader = [
+        self.Columns = [
             "path",
             "filename",
             "ctime",
@@ -50,14 +51,16 @@ class PFLRunJPG(pflrun.PFLRun):
     def getMatchDataList(self, match):
         """Return list with data from the match."""
         try:
+            im = Image.open(match)
+            width, height = im.size
             return [
                 match.parent,
                 match.name,
                 datetime.fromtimestamp(os.path.getctime(match)),
                 datetime.fromtimestamp(os.path.getmtime(match)),
                 os.path.getsize(match),
-                0,
-                0,
+                width,
+                height,
             ]
         except (Exception):
             return [match.parent, match.name, None, None, -1, -1, -1]
@@ -67,8 +70,12 @@ class PFLRunJPG(pflrun.PFLRun):
         return [
             str(dataList[0]),
             str(dataList[1]),
-            dataList[2].strftime(self._fileDateTimeFormat),
-            dataList[3].strftime(self._fileDateTimeFormat),
+            dataList[2].strftime(self._fileDateTimeFormat)
+            if dataList[2] is not None
+            else "",
+            dataList[3].strftime(self._fileDateTimeFormat)
+            if dataList[3] is not None
+            else "",
             str(dataList[4]),
             str(dataList[5]),
             str(dataList[6]),
@@ -104,6 +111,7 @@ try:
         args.outfile,
         args.overwrite + args.append,
         args.nodots,
+        args.dots,
     )
 
     print("Search for jpg files in directory '{}'...".format(params.ScanPath))
