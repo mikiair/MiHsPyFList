@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.0.2"
-__date__ = "07/03/2023"
+__date__ = "07/06/2023"
 
 """Classes in pflout handle the output to stdout or to a CSV writer file
 """
@@ -78,5 +78,3 @@ class PFLOutCSV(PFLOutFile):
 
     def close(self):
         self._outFile.close()
-
-

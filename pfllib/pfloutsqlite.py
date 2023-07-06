@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.2"
-__date__ = "07/03/2023"
+__version__ = "0.0.3"
+__date__ = "07/06/2023"
 
 """Class handles output of matching file search results to SQLite database.
 """
@@ -22,7 +22,7 @@ class PFLOutSqlite(pflout.PFLOutFile):
     def __init__(self, filePath, columnNames, basePath):
         super().__init__(filePath, columnNames)
         self._basePath = str(basePath)
-        self._basePathLen = len(self._basePath )
+        self._basePathLen = len(self._basePath)
         self._qmarks = (len(self._columnNames) * "?, ").strip(", ")
         self._insertCmd = f"INSERT INTO filelist VALUES ({self._qmarks})"
 
@@ -44,9 +44,11 @@ class PFLOutSqlite(pflout.PFLOutFile):
 
     def writeMatch(self, formattedList):
         if not formattedList[0] == self._currentPath:
-            self._currentPathID = self.insertPath(str(formattedList[0])[self._basePathLen+1:])
+            self._currentPathID = self.insertPath(
+                str(formattedList[0])[self._basePathLen + 1 :]
+            )
             self._currentPath = formattedList[0]
-            
+
         formattedList[0] = self._currentPathID
         self._dataSets.append(formattedList)
 
@@ -63,9 +65,9 @@ class PFLOutSqlite(pflout.PFLOutFile):
             sqlCmd = f"DROP TABLE {tableName}"
             self._db[1].execute(sqlCmd)
             self._db[0].commit()
-        except:
+        except Exception:
             pass
-        
+
     def createtable(self, tableName, columnNames):
         joinedCols = (", ".join(columnNames)).strip(", ")
         sqlCmd = f"CREATE TABLE {tableName}({joinedCols})"
@@ -78,9 +80,9 @@ class PFLOutSqlite(pflout.PFLOutFile):
         self._db[1].execute(insertPathCmd, (None, newPath))
         self._db[0].commit()
         queryPathIdCmd = "SELECT id FROM dirlist WHERE path = ?"
-        newrow = self._db[1].execute(queryPathIdCmd, (str(newPath), ))
+        newrow = self._db[1].execute(queryPathIdCmd, (str(newPath),))
         return newrow.fetchone()[0]
-    
+
     def executeInsertFiles(self):
         """Insert collection with new file datasets into table."""
         try:

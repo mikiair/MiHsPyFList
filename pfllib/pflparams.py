@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.4"
-__date__ = "07/03/2023"
+__version__ = "0.0.5"
+__date__ = "07/06/2023"
 
 """Class PFLParams defines a set of parameters used for searching files:
 a match pattern, a directory to scan, option to recurse into sub-folders,
@@ -107,9 +107,7 @@ class PFLParams:
         self.resolveScanPath(self._ScanDir)
 
         if not self._ScanPath.exists():
-            raise FileNotFoundError(
-                "'{0}' does not exist!".format(self._ScanPath)
-            )
+            raise FileNotFoundError("'{0}' does not exist!".format(self._ScanPath))
         if not self._ScanPath.is_dir():
             raise NotADirectoryError("'{0}' is not a directory!".format(self._ScanPath))
 

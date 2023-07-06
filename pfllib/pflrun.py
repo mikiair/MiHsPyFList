@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.4"
-__date__ = "07/02/2023"
+__version__ = "0.0.5"
+__date__ = "07/06/2023"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files,
@@ -129,9 +129,7 @@ class PFLRun:
             print("Write results to {}".format(self._params.OutFilePath))
             if self._params.OutFileType == 1:
                 self._pflout = pfloutsqlite.PFLOutSqlite(
-                    self._params.OutFilePath,
-                    self._columns,
-                    self._params.ScanPath
+                    self._params.OutFilePath, self._columns, self._params.ScanPath
                 )
                 self._formatMatchList = self.formatListDatabase
             else:
