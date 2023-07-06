@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.1"
-__date__ = "07/01/2022"
+__version__ = "0.0.2"
+__date__ = "07/06/2022"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information (with SHA256 hash)
@@ -111,6 +111,12 @@ try:
     run = PFLRunFileInfoWithSHA256(params)
 
     run.Run(False)
+except (ValueError) as e:
+    print(f"Invalid parameter: {e.args[0]}")
+except (FileNotFoundError) as e:
+    print(f"Directory not found: {e.args[0]}")
+except (NotADirectoryError) as e:
+    print(f"Error: {e.args[0]}")
 except (KeyboardInterrupt):
     print("Cancelled by user!")
 except (Exception) as e:

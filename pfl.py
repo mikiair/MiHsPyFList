@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.5"
-__date__ = "07/01/2023"
+__version__ = "0.0.6"
+__date__ = "07/06/2023"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results to stdout, save as a CSV file or write to a sqlite3 database.
@@ -57,6 +57,12 @@ try:
     run = PFLRunFileName(params)
 
     run.Run(False)
+except (ValueError) as e:
+    print(f"Invalid parameter: {e.args[0]}")
+except (FileNotFoundError) as e:
+    print(f"Directory not found: {e.args[0]}")
+except (NotADirectoryError) as e:
+    print(f"Error: {e.args[0]}")
 except (KeyboardInterrupt):
     print("Cancelled by user!")
 except (Exception) as e:
