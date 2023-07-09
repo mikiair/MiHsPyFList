@@ -15,12 +15,11 @@ handling each match by a virtual method.
 import glob
 import pathlib
 import sys
+import time
 
 # local imports
 import pfllib.pflout as pflout
 import pfllib.pfloutsqlite as pfloutsqlite
-
-# import time
 
 
 class PFLRun:
@@ -49,7 +48,7 @@ class PFLRun:
 
     def Run(self, immediate=True):
         """Run the file search."""
-        # startTime = time.time()
+        startTime = time.time()
 
         self.createpflout()
 
@@ -98,7 +97,7 @@ class PFLRun:
                 print("Found no matching files.")
             else:
                 print("Found {0} matching file(s).".format(self._countFiles))
-            # print("Took {0:.2f} seconds.".format(time.time() - startTime))
+            print("Took {0:.2f} seconds.".format(time.time() - startTime))
 
     def getMatchDataList(self, match):
         """Return list with data from the match."""
@@ -144,4 +143,4 @@ class PFLRun:
 
     def printdot(self):
         if self._params.ShowDots and self._countFiles % self._params.FilesPerDot == 0:
-            print(".", end="")
+            print(".", end="", flush=True)

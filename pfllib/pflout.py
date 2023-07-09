@@ -43,7 +43,10 @@ class PFLOutStd(PFLOut):
             self._currentFolder = formattedList[0]
             print(self._currentFolder + ":")
         if len(formattedList) > 2:
-            print("\t" + formattedList[1] + " - " + "/".join(formattedList[2:]))
+            joinedOut = "\t" + formattedList[1] + " - " + "/".join(formattedList[2:])
+            if len(joinedOut) > 100:
+                joinedOut = joinedOut[:100] + "..."
+            print(joinedOut)
         else:
             print("\t" + formattedList[1])
 
