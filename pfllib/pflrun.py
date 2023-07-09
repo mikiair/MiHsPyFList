@@ -143,9 +143,5 @@ class PFLRun:
             self._pflout.openout(overwrite)
 
     def printdot(self):
-        if (
-            self._params.ShowDots
-            and self._countFiles % self._params.FilesPerDot == 0
-        ):
+        if self._params.ShowDots and self._countFiles % self._params.FilesPerDot == 0:
             print(".", end="")
-        
