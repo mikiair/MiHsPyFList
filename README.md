@@ -1,11 +1,11 @@
 # MiHsPyFList
 Sort of a finger exercise in [Python](https://www.python.org) - several tools for listing files filtered by name/type in a folder and writing information to `stdout`, a CSV file or to a [Sqlite](https://www.sqlite.org) database.
-* pfl - Simple file listing with just path and filename
-* pfli - File listing with additional file information on size and creation / last write dates
-* pflh - as before, plus SHA256 hash
-* pflj - File listing with fixed search pattern '*.jpg', JPG width and height are written
-* pfl3 - File listing with fixed search pattern '*.mp3', MP3 tag information is given
-* pfl4 - File listing with fixed search pattern '*.mp4', MP4 tag information is given
+* **pfl** - Simple file listing with just path and filename
+* **pfli** - File listing with additional file information on size and creation / last write dates
+* **pflh** - as before, plus SHA256 hash
+* **pflj** - File listing with fixed search pattern '*.jpg', JPG width and height are written
+* **pfl3** - File listing with fixed search pattern '*.mp3', MP3 tag information is given
+* **pfl4** - File listing with fixed search pattern '*.mp4', MP4 tag information is given
 
 ## Usage
 ```pfl [-h] [-r] [-o | -a] [-n | -d DOTS] [pattern] [scandir] [outfile]```
@@ -17,6 +17,7 @@ Sort of a finger exercise in [Python](https://www.python.org) - several tools fo
 ### Optional arguments
   * -h, --help - show help message and exit
   * -r, --recurse - recurse sub-folders
+  * -l, --limit - limit the scanned file size for hash value calculation to 100MB (**pflh** only)
 
 ### File options
   optional arguments apply when writing to CSV or database file (ignored otherwise)
