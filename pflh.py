@@ -22,8 +22,53 @@ import pfllib.pflparams as pflparams
 import pfllib.pflrun as pflrun
 
 
+class PFLArgParseWUserPatternAndLimit(pflargparse.PFLArgParseWUserPattern):
+    """Argument parser class adding an option to limit scanned file size
+    used for hashing.
+    """
+
+    def __init__(self, description):
+        super().__init__(description)
+        self.add_argument(
+            "-l",
+            "--limit",
+            dest="limit",
+            action="store_true",
+            default=False,
+            help="limit the scanned file size for hash value calculation to 100MB",
+        )
+
+
+# def check_positive(value):
+#     ivalue = int(value)
+#     if ivalue < 0:
+#         raise argparse.ArgumentTypeError("Limit must be a positive integer value or zero!")
+#     return ivalue
+
+
+class PFLParamsWithLimit(pflparams.PFLParams):
+    """Parameter class with additional file hash size limit."""
+
+    def __init__(
+        self, pattern, scandir, recurse, outfile, outexistsmode, nodots, dots, limit
+    ):
+        super().__init__(
+            pattern, scandir, recurse, outfile, outexistsmode, nodots, dots
+        )
+        self._IsLimited = limit
+
+    def getIsLimited(
+        self, doc="Return true if the file size for hashing will be limited"
+    ):
+        return self._IsLimited
+
+    IsLimited = property(getIsLimited)
+
+
 class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
     """Derived class for scanning and storage of file information including SHA256 hash."""
+
+    BIGFILESIZELIMIT = 100 * 1024 * 1024
 
     def __init__(self, params):
         super().__init__(params)
@@ -33,25 +78,41 @@ class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
     def getMatchDataList(self, match):
         """Return list with data from the match."""
         try:
-            hashbytes = self.getHashBytes(match)
+            stat = os.stat(match)
+            if params.IsLimited and stat.st_size > self.BIGFILESIZELIMIT:
+                hashbytes = self.getHashBytesLimited(match)
+            else:
+                hashbytes = self.getHashBytes(match)
+
             return [
                 match.parent,
                 match.name,
-                os.path.getsize(match),
-                datetime.fromtimestamp(os.path.getctime(match)),
-                datetime.fromtimestamp(os.path.getmtime(match)),
+                stat.st_size,
+                datetime.fromtimestamp(stat.st_ctime),
+                datetime.fromtimestamp(stat.st_mtime),
                 hashbytes,
             ]
         except Exception:
-            return [match.parent, match.name, -1, None, None]
+            return [match.parent, match.name, -1, None, None, None]
 
-    def getHashBytes(self, filename, blocksize=65536):
+    def getHashBytesLimited(self, filename):
+        """Return the SHA256 hash of the file scanning only the first 100MB."""
+        hashsha = hashlib.sha256()  # create a new object for each file!
+        with open(filename, "rb") as f:
+            bytesRead = 0
+            for block in iter(lambda: f.read(8192), b""):
+                hashsha.update(block)
+                bytesRead += len(block)
+                if bytesRead > self.BIGFILESIZELIMIT:
+                    break
+        return hashsha.digest()
+
+    def getHashBytes(self, filename):
         """Return the SHA256 hash of the file."""
         hashsha = hashlib.sha256()  # create a new object for each file!
         with open(filename, "rb") as f:
-            for block in iter(lambda: f.read(blocksize), b""):
+            for block in iter(lambda: f.read(8192), b""):
                 hashsha.update(block)
-            # requires Python >v3.7: digest = hashlib.file_digest(f, "sha256")
         return hashsha.digest()
 
     def formatListStrings(self, dataList):
@@ -66,7 +127,7 @@ class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
             dataList[4].strftime(self._fileDateTimeFormat)
             if dataList[4] is not None
             else "",
-            dataList[5].hex(),
+            dataList[5].hex() if dataList[5] is not None else "",
         ]
 
     def formatListDatabase(self, dataList):
@@ -83,7 +144,7 @@ class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
 
 # define and collect commandline arguments
 # (kept outside try-catch block to leave exception messages untouched)
-parser = pflargparse.PFLArgParseWUserPattern(
+parser = PFLArgParseWUserPatternAndLimit(
     description="List files matching a pattern in a directory and its sub-directories,\n"
     + "and print results including file information with SHA256 to stdout,\n"
     + "or save as a CSV or database file."
@@ -92,7 +153,7 @@ args = parser.parse_args()
 
 try:
     # create parameter object
-    params = pflparams.PFLParams(
+    params = PFLParamsWithLimit(
         args.pattern,
         args.scandir,
         args.recurse,
@@ -100,6 +161,7 @@ try:
         args.overwrite + args.append,
         args.nodots,
         args.dots,
+        args.limit,
     )
 
     print(
