@@ -21,8 +21,9 @@ class PFLOutSqlite(pflout.PFLOutFile):
 
     def __init__(self, filePath, columnNames, basePath):
         super().__init__(filePath, columnNames)
-        self._basePath = str(basePath)
+        self._basePath = str(basePath).rstrip("\\")
         self._basePathLen = len(self._basePath)
+
         self._qmarks = (len(self._columnNames) * "?, ").strip(", ")
         self._insertCmd = f"INSERT INTO filelist VALUES ({self._qmarks})"
 
