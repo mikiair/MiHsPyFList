@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.3"
-__date__ = "07/06/2023"
+__version__ = "0.1.0"
+__date__ = "07/09/2023"
 
 """List jpg files in a directory and its sub-directories,
 and print results including jpg tags to stdout or save as a CSV file

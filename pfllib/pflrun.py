@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.5"
-__date__ = "07/06/2023"
+__version__ = "0.1.0"
+__date__ = "07/09/2023"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files,
@@ -74,11 +74,7 @@ class PFLRun:
                         matchDataList = self.getMatchDataList(matchPath)
                         self._pflout.writeMatch(self._formatMatchList(matchDataList))
                         self._countFiles += 1
-                        if (
-                            self._params.ShowDots
-                            and self._countFiles % self._params.FilesPerDot == 0
-                        ):
-                            print(".", end="")
+                        self.printdot()
             else:
                 matchingFiles = self._params.ScanPath.glob(self._params.Pattern)
 
@@ -88,11 +84,7 @@ class PFLRun:
                         matchDataList = self.getMatchDataList(match)
                         self._pflout.writeMatch(self._formatMatchList(matchDataList))
                         self._countFiles += 1
-                        if (
-                            self._params.ShowDots
-                            and self._countFiles % self._params.FilesPerDot == 0
-                        ):
-                            print(".", end="")
+                        self.printdot()
         finally:
             # close outfile
             self._pflout.close()
@@ -149,3 +141,11 @@ class PFLRun:
                 overwrite = self._params.OutExistsMode
 
             self._pflout.openout(overwrite)
+
+    def printdot(self):
+        if (
+            self._params.ShowDots
+            and self._countFiles % self._params.FilesPerDot == 0
+        ):
+            print(".", end="")
+        

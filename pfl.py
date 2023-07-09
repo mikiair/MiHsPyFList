@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.6"
-__date__ = "07/06/2023"
+__version__ = "0.1.0"
+__date__ = "07/09/2023"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results to stdout, save as a CSV file or write to a sqlite3 database.

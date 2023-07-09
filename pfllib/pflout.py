@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.2"
-__date__ = "07/06/2023"
+__version__ = "0.1.0"
+__date__ = "07/09/2023"
 
 """Classes in pflout handle the output to stdout or to a CSV writer file
 """
@@ -60,7 +60,7 @@ class PFLOutCSV(PFLOutFile):
     """Class for result output to CSV file."""
 
     def __init__(self, filePath, columnNames):
-        super().__init(filePath, columnNames)
+        super().__init__(filePath, columnNames)
 
     def openout(self, mode):
         self._outFile = open(self._filePath, mode, newline="")
