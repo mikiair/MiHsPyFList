@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/14/2023"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information (with SHA256 hash)
@@ -79,10 +79,13 @@ class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
         """Return list with data from the match."""
         try:
             stat = os.stat(match)
-            if params.IsLimited and stat.st_size > self.BIGFILESIZELIMIT:
-                hashbytes = self.getHashBytesLimited(match)
+            if stat.st_size > 0:
+                if params.IsLimited and stat.st_size > self.BIGFILESIZELIMIT:
+                    hashbytes = self.getHashBytesLimited(match)
+                else:
+                    hashbytes = self.getHashBytes(match)
             else:
-                hashbytes = self.getHashBytes(match)
+                hashbytes = None
 
             return [
                 match.parent,

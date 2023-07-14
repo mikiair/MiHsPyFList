@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/14/2023"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files,
@@ -50,43 +50,15 @@ class PFLRun:
         """Run the file search."""
         startTime = time.time()
 
-        self.createpflout()
-
         self._countFiles = 0
 
         try:
+            self.createpflout()
+
             if immediate:
-                # use glob iterator to immediately handle results
-                # (does not return folders and files starting with dot!)
-                matchingFiles = glob.iglob(
-                    f"{self._params.ScanPath}/{self._params.Pattern}",
-                    recursive=True if self._params.Pattern.find("**") >= 0 else False,
-                )
-
-                # go through the resulting file list and print results to stdout or file
-                for match in matchingFiles:
-                    matchPath = pathlib.Path(match)
-                    if (
-                        matchPath.is_file()
-                        and str(matchPath).find("$RECYCLE.BIN") == -1
-                    ):
-                        matchDataList = self.getMatchDataList(matchPath)
-                        self._pflout.writeMatch(self._formatMatchList(matchDataList))
-                        self._countFiles += 1
-                        self.printdot()
+                self.matchFilesImmediate()
             else:
-                matchingFiles = self._params.ScanPath.glob(self._params.Pattern)
-
-                # go through the resulting file list and print results to stdout or file
-                for match in matchingFiles:
-                    if match.is_file() and str(match).find("$RECYCLE.BIN") == -1:
-                        matchDataList = self.getMatchDataList(match)
-                        self._pflout.writeMatch(self._formatMatchList(matchDataList))
-                        self._countFiles += 1
-                        self.printdot()
-        finally:
-            # close outfile
-            self._pflout.close()
+                self.matchFiles()
 
             if self._params.ShowDots:
                 if self._countFiles < self._params.FilesPerDot:
@@ -97,6 +69,11 @@ class PFLRun:
                 print("Found no matching files.")
             else:
                 print("Found {0} matching file(s).".format(self._countFiles))
+        finally:
+            # close outfile
+            if self._pflout is not None:
+                self._pflout.close()
+
             print("Took {0:.2f} seconds.".format(time.time() - startTime))
 
     def getMatchDataList(self, match):
@@ -118,6 +95,16 @@ class PFLRun:
             self._formatMatchList = self.formatListStrings
         else:
             print("Write results to {}".format(self._params.OutFilePath))
+
+            if self._params.OutExistsMode == "":
+                if self._params.OutFilePath.exists():
+                    inputres = input("Output file already exists. Overwrite (Y/n)?")
+                    if inputres != "" and inputres != "Y" and inputres != "y":
+                        sys.exit(0)
+                overwrite = "w"
+            else:
+                overwrite = self._params.OutExistsMode
+
             if self._params.OutFileType == 1:
                 self._pflout = pfloutsqlite.PFLOutSqlite(
                     self._params.OutFilePath, self._columns, self._params.ScanPath
@@ -130,16 +117,41 @@ class PFLRun:
                 )
                 self._formatMatchList = self.formatListStrings
 
-            if self._params.OutExistsMode == "":
-                if self._params.OutFilePath.exists():
-                    inputres = input("Output file already exists. Overwrite (Y/n)?")
-                    if inputres != "" and inputres != "Y" and inputres != "y":
-                        sys.exit(0)
-                overwrite = "w"
-            else:
-                overwrite = self._params.OutExistsMode
-
             self._pflout.openout(overwrite)
+
+    def matchFilesImmediate(self):
+        # use glob iterator to immediately handle results
+        # (does not return folders and files starting with dot!)
+        matchingFiles = glob.iglob(
+            f"{self._params.ScanPath}/{self._params.Pattern}",
+            recursive=True if self._params.Pattern.find("**") >= 0 else False,
+        )
+
+        try:
+            # go through the resulting file list and print results to stdout or file
+            for match in matchingFiles:
+                matchPath = pathlib.Path(match)
+                if matchPath.is_file() and str(matchPath).find("$RECYCLE.BIN") == -1:
+                    matchDataList = self.getMatchDataList(matchPath)
+                    self._pflout.writeMatch(self._formatMatchList(matchDataList))
+                    self._countFiles += 1
+                    self.printdot()
+        finally:
+            self._pflout.flushMatches()
+
+    def matchFiles(self):
+        matchingFiles = self._params.ScanPath.glob(self._params.Pattern)
+
+        try:
+            # go through the resulting file list and print results to stdout or file
+            for match in matchingFiles:
+                if match.is_file() and str(match).find("$RECYCLE.BIN") == -1:
+                    matchDataList = self.getMatchDataList(match)
+                    self._pflout.writeMatch(self._formatMatchList(matchDataList))
+                    self._countFiles += 1
+                    self.printdot()
+        finally:
+            self._pflout.flushMatches()
 
     def printdot(self):
         if self._params.ShowDots and self._countFiles % self._params.FilesPerDot == 0:

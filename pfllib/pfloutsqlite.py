@@ -3,17 +3,15 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/14/2023"
 
 """Class handles output of matching file search results to SQLite database.
 """
 
-# standard imports
-import sqlite3
-
 # local imports
 import pfllib.pflout as pflout
+import pfllib.pfsql as pfsql
 
 
 class PFLOutSqlite(pflout.PFLOutFile):
@@ -21,6 +19,7 @@ class PFLOutSqlite(pflout.PFLOutFile):
 
     def __init__(self, filePath, columnNames, basePath):
         super().__init__(filePath, columnNames)
+        self._db = None
         self._basePath = str(basePath).rstrip("\\")
         self._basePathLen = len(self._basePath)
 
@@ -28,19 +27,20 @@ class PFLOutSqlite(pflout.PFLOutFile):
         self._insertCmd = f"INSERT INTO filelist VALUES ({self._qmarks})"
 
     def openout(self, mode):
-        connection = sqlite3.connect(self._filePath)
-        cursor = connection.cursor()
-        self._db = (connection, cursor)
+        self._db = pfsql.opendb(self._filePath)
         if mode == "w":
-            self.droptable("filelist")
-            self.droptable("dirlist")
+            try:
+                pfsql.droptable(self._db, "filelist")
+                pfsql.droptable(self._db, "dirlist")
+            except Exception:
+                pass
 
-        self.createtable("dirlist", ["id INTEGER PRIMARY KEY", "path"])
+        pfsql.createtable(self._db, "dirlist", ["id INTEGER PRIMARY KEY", "path"])
         self._currentPathID = self.insertPath(self._basePath)
         self._currentPath = None
 
         self._columnNames[0] += " REFERENCES dirlist(id)"
-        self.createtable("filelist", self._columnNames)
+        pfsql.createtable(self._db, "filelist", self._columnNames)
         self._dataSets = []
 
     def writeMatch(self, formattedList):
@@ -56,24 +56,13 @@ class PFLOutSqlite(pflout.PFLOutFile):
         if len(self._dataSets) == 50:
             self.executeInsertFiles()
 
-    def close(self):
+    def flushMatches(self):
         if len(self._dataSets) > 0:
             self.executeInsertFiles()
-        self._db[0].close()
 
-    def droptable(self, tableName):
-        try:
-            sqlCmd = f"DROP TABLE {tableName}"
-            self._db[1].execute(sqlCmd)
-            self._db[0].commit()
-        except Exception:
-            pass
-
-    def createtable(self, tableName, columnNames):
-        joinedCols = (", ".join(columnNames)).strip(", ")
-        sqlCmd = f"CREATE TABLE {tableName}({joinedCols})"
-        self._db[1].execute(sqlCmd)
-        self._db[0].commit()
+    def close(self):
+        if self._db is not None:
+            pfsql.closedb(self._db)
 
     def insertPath(self, newPath):
         """Insert a new path entry into the dirlist table."""

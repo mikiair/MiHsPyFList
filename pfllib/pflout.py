@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/14/2023"
 
 """Classes in pflout handle the output to stdout or to a CSV writer file
 """
@@ -23,6 +23,9 @@ class PFLOut:
         pass
 
     def writeMatch(self, formattedList):
+        pass
+
+    def flushMatches(self):
         pass
 
     def close(self):
@@ -64,6 +67,7 @@ class PFLOutCSV(PFLOutFile):
 
     def __init__(self, filePath, columnNames):
         super().__init__(filePath, columnNames)
+        self._outFile = None
 
     def openout(self, mode):
         self._outFile = open(self._filePath, mode, newline="")
@@ -80,4 +84,5 @@ class PFLOutCSV(PFLOutFile):
         self._outFile.flush()
 
     def close(self):
-        self._outFile.close()
+        if self._outFile is not None:
+            self._outFile.close()
