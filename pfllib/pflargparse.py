@@ -67,13 +67,13 @@ class PFLArgParseOptionalPattern(ArgumentParser):
             help="overwrite the outfile if existent",
         )
         existmode_group.add_argument(
-            "-a",
-            "--append",
-            dest="append",
+            "-u",
+            "--update",
+            dest="update",
             action="store_const",
             const="a",
             default="",
-            help="append to the outfile if existent",
+            help="update or append to the outfile if existent",
         )
 
         dotmode_group = fileopt_group.add_mutually_exclusive_group()

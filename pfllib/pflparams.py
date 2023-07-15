@@ -26,7 +26,7 @@ class PFLParams:
         if fixpattern is None:
             try:
                 self._Pattern = args.pattern
-            except:
+            except Exception:
                 self._Pattern = "*.*"
         else:
             self._Pattern = fixpattern
@@ -38,7 +38,7 @@ class PFLParams:
             self._OutFileType = 0 if str(args.outfile).lower().endswith(".csv") else 1
         else:
             self._OutFileType = None
-        self._OutExistsMode = args.overwrite + args.append
+        self._OutExistsMode = args.overwrite + args.update
         self._ShowDots = not self._UseStdOut and not args.nodots
         if self._ShowDots:
             self._FilesPerDot = pow(10, args.dots)
