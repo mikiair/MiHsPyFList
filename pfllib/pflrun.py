@@ -14,6 +14,7 @@ handling each match by a virtual method.
 # standard imports
 import glob
 import pathlib
+import re
 import sys
 import time
 
@@ -56,6 +57,11 @@ class PFLRun:
         startTime = time.time()
 
         try:
+            if not self._params.Exclude:
+                self._regexTest = self.regexNotMatch
+            else:
+                self._regexTest = self.regexFunc
+
             if immediate:
                 self.matchFilesImmediate()
             else:
@@ -138,6 +144,8 @@ class PFLRun:
         try:
             # go through the resulting file list and print results to stdout or file
             for match in matchingFiles:
+                if self._regexTest(match):
+                    continue
                 matchPath = pathlib.Path(match)
                 if matchPath.is_file() and str(matchPath).find("$RECYCLE.BIN") == -1:
                     matchDataList = self.getMatchDataList(matchPath)
@@ -153,6 +161,9 @@ class PFLRun:
         try:
             # go through the resulting file list and print results to stdout or file
             for match in matchingFiles:
+                if self._regexTest(str(match)):
+                    continue
+
                 if match.is_file() and str(match).find("$RECYCLE.BIN") == -1:
                     matchDataList = self.getMatchDataList(match)
                     self._pflout.writeMatch(self._formatMatchList(matchDataList))
@@ -160,6 +171,16 @@ class PFLRun:
                     self.printdot()
         finally:
             self._pflout.flushMatches()
+
+    def regexNotMatch(self, filename):
+        """Always return False. No files excluded."""
+        return False
+
+    def regexFunc(self, filename):
+        """Return true if the filename does match the exclude regular expression.
+        In that case the file will not be included in the file listing.
+        """
+        return re.search(self._params.Exclude, filename) is not None
 
     def printdot(self):
         if self._params.ShowDots and self._countFiles % self._params.FilesPerDot == 0:

@@ -8,7 +8,7 @@ Sort of a finger exercise in [Python](https://www.python.org) - several tools fo
 * **pfl4** - File listing with fixed search pattern '*.mp4', MP4 tag information is given
 
 ## Usage
-```pfl [-h] [-r] [-o | -a] [-n | -d DOTS] [pattern] [scandir] [outfile]```
+```pfl [-h] [-r] [-x EXCLUDE] [-o | -u] [-n | -d DOTS] [pattern] [scandir] [outfile]```
 ### Positional arguments
   * pattern - only files matching this pattern will be listed
   * scandir - directory to scan for files (default=current folder)
@@ -17,12 +17,13 @@ Sort of a finger exercise in [Python](https://www.python.org) - several tools fo
 ### Optional arguments
   * -h, --help - show help message and exit
   * -r, --recurse - recurse sub-folders
+  * -x EXCLUDE, --exclude EXCLUDE - exclude files and/or folders matching this regular expression
   * -l, --limit - limit the scanned file size for hash value calculation to 100MB (**pflh** only)
 
 ### File options
   optional arguments apply when writing to CSV or database file (ignored otherwise)
   * -o, --overwrite - overwrite the outfile if existent
-  * -a, --append - append to the outfile if existent
+  * -u, --update - update SQLite database or append to the CSV outfile if existent
   * -n, --nodots - do not display dots for matches
   * -d DOTS, --dots DOTS - logarithmic number of matching files to display one dot for (i.e. 0=every file, 1=each 10 files, 2=each 100 files...)
 

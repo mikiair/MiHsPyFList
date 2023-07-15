@@ -30,8 +30,14 @@ class PFLParams:
                 self._Pattern = "*.*"
         else:
             self._Pattern = fixpattern
+
+        self._Exclude = args.exclude.strip("\"'")
+        if self._Exclude == ".":
+            self._Exclude = ""
+
         self._ScanDir = args.scandir
         self._Recurse = args.recurse
+
         self._OutFile = args.outfile
         self._UseStdOut = args.outfile is None
         if not self._UseStdOut:
@@ -52,6 +58,11 @@ class PFLParams:
         return "**/" + self._Pattern if self._Recurse else self._Pattern
 
     Pattern = property(getPattern)
+
+    def getExclude(self, doc="A expression to exclude files/folders from listing"):
+        return self._Exclude
+
+    Exclude = property(getExclude)
 
     def getScanPath(self, doc="The path to the folder to scan for files"):
         return self._ScanPath

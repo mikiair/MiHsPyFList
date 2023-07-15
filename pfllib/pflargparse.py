@@ -32,6 +32,15 @@ class PFLArgParseOptionalPattern(ArgumentParser):
             help="recurse sub-folders",
         )
 
+        self.add_argument(
+            "-x",
+            "--exclude",
+            dest="exclude",
+            type=str,
+            default="",
+            help="exclude files and/or folders matching this regular expression",
+        )
+
         if withPattern:
             self.addPatternArgument()
 
@@ -73,7 +82,7 @@ class PFLArgParseOptionalPattern(ArgumentParser):
             action="store_const",
             const="a",
             default="",
-            help="update or append to the outfile if existent",
+            help="update SQLite database or append to the CSV outfile if existent",
         )
 
         dotmode_group = fileopt_group.add_mutually_exclusive_group()
