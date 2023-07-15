@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.1.1"
-__date__ = "07/14/2023"
+__date__ = "07/15/2023"
 
 """List files matching a pattern in a directory and its sub-directories,
 and print results including file information (with SHA256 hash)
@@ -106,7 +106,7 @@ class PFLRunFileInfoWithSHA256(pflrun.PFLRun):
             for block in iter(lambda: f.read(8192), b""):
                 hashsha.update(block)
                 bytesRead += len(block)
-                if bytesRead > self.BIGFILESIZELIMIT:
+                if bytesRead >= self.BIGFILESIZELIMIT:
                     break
         return hashsha.digest()
 

@@ -22,6 +22,7 @@ class PFLParams:
     """
 
     def __init__(self, pattern, scandir, recurse, outfile, outexistsmode, nodots, dots):
+        """Initialize the object from commandline arguments."""
         self._Pattern = pattern
         self._ScanDir = scandir
         self._Recurse = recurse

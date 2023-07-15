@@ -48,13 +48,14 @@ class PFLRun:
 
     def Run(self, immediate=True):
         """Run the file search."""
-        startTime = time.time()
-
         self._countFiles = 0
 
-        try:
-            self.createpflout()
+        self.createpflout()
+^
+		# set start time after possible user interaction in createpflout
+        startTime = time.time()
 
+        try:
             if immediate:
                 self.matchFilesImmediate()
             else:
@@ -70,11 +71,15 @@ class PFLRun:
             else:
                 print("Found {0} matching file(s).".format(self._countFiles))
         finally:
+            duration = time.time() - startTime
+
             # close outfile
             if self._pflout is not None:
+                if self._params.OutFileType == 1:
+                    self._pflout.updateStats(self._countFiles, duration)
                 self._pflout.close()
 
-            print("Took {0:.2f} seconds.".format(time.time() - startTime))
+            print("Took {0:.2f} seconds.".format(duration))
 
     def getMatchDataList(self, match):
         """Return list with data from the match."""
@@ -118,6 +123,9 @@ class PFLRun:
                 self._formatMatchList = self.formatListStrings
 
             self._pflout.openout(overwrite)
+
+            if self._params.OutFileType == 1:
+                self._pflout.writeStats(self._params)
 
     def matchFilesImmediate(self):
         # use glob iterator to immediately handle results
