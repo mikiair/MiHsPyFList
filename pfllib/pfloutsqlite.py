@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.1"
-__date__ = "07/14/2023"
+__version__ = "0.2.0"
+__date__ = "07/15/2023"
 
 """Class handles output of matching file search results to SQLite database.
 """
@@ -26,28 +26,51 @@ class PFLOutSqlite(pflout.PFLOutFile):
         self._basePath = str(basePath).rstrip("\\")
         self._basePathLen = len(self._basePath)
 
+        self._columnNames.append("status")
+        self._pqmarks = "=?, ".join(self._columnNames) + "=?"
+        self._updateCmd = f"UPDATE filelist SET {self._pqmarks} WHERE id=?"
+
+        self._columnNames.append("id")
         self._qmarks = (len(self._columnNames) * "?, ").strip(", ")
         self._insertCmd = f"INSERT INTO filelist VALUES ({self._qmarks})"
 
     def openout(self, mode):
+        """Open the SQLite database file and set up the required tables."""
         self._db = pfsql.opendb(self._filePath)
+
         if mode == "w":
-            try:
-                # drop filelist table first as it references dirlist
-                pfsql.droptable(self._db, "filelist")
-                pfsql.droptable(self._db, "dirlist")
-            except Exception:
-                pass
+            self.droptables()
 
-        pfsql.createtable(self._db, "dirlist", ["id INTEGER PRIMARY KEY", "path"], True)
-        self._currentPathID = self.insertPath(self._basePath)
+        self.setuptables()
+
         self._currentPath = None
-
-        self._columnNames[0] += " REFERENCES dirlist(id)"
-        pfsql.createtable(self._db, "filelist", self._columnNames, True)
         self._dataSets = []
 
+    def droptables(self):
+        try:
+            pfsql.droptable(self._db, "stats", True)
+            # drop filelist table first as it references dirlist
+            pfsql.droptable(self._db, "filelist", True)
+            pfsql.droptable(self._db, "dirlist", True)
+        except Exception:
+            print("Error while clearing existing data tables (check recommended)!?")
+
+    def setuptables(self):
+        pfsql.createtable(
+            self._db, "dirlist", ["id INTEGER PRIMARY KEY", "path type UNIQUE"], True
+        )
+        self._currentPathID = self.insertPath(self._basePath)
+
+        self._columnNames[0] += " REFERENCES dirlist(id)"
+        self._columnNames[-1] += " INTEGER PRIMARY KEY"
+        pfsql.createtable(
+            self._db, "filelist", self._columnNames, True, "UNIQUE(path, filename)"
+        )
+
+        pfsql.updaterow(self._db, "filelist", "status = ?", None, (0,))
+
     def writeStats(self, params):
+        """Create statistics table if not existing and append a new row."""
         pfsql.createtable(
             self._db,
             "stats",
@@ -84,15 +107,28 @@ class PFLOutSqlite(pflout.PFLOutFile):
             )
             self._currentPath = formattedList[0]
 
+        fileID = pfsql.getrowid(
+            self._db,
+            "filelist",
+            f"path={self._currentPathID} AND filename='{formattedList[1]}'",
+        )
+
         formattedList[0] = self._currentPathID
-        self._dataSets.append(formattedList)
+        formattedList.append(1)
+
+        if fileID is None:
+            formattedList.append(None)
+            self._dataSets.append([-1, formattedList])
+        else:
+            formattedList.append(fileID[0])
+            self._dataSets.append([fileID[0], formattedList])
 
         if len(self._dataSets) == 50:
-            self.executeInsertFiles()
+            self.executeInsertUpdateFiles()
 
     def flushMatches(self):
         if len(self._dataSets) > 0:
-            self.executeInsertFiles()
+            self.executeInsertUpdateFiles()
 
     def updateStats(self, countFiles, duration):
         pfsql.updaterow(
@@ -108,13 +144,26 @@ class PFLOutSqlite(pflout.PFLOutFile):
             pfsql.closedb(self._db)
 
     def insertPath(self, newPath):
-        """Insert a new path entry into the dirlist table and return its row ID."""
+        """If not existing, insert a new path entry into the dirlist table,
+        in any way, return its row ID.
+        """
+        rowID = pfsql.getrowid(self._db, "dirlist", f"path='{newPath}'")
+
+        if rowID is not None:
+            return rowID[0]
+
         return pfsql.insertidrow(self._db, "dirlist", "?, ?", (None, newPath))
 
-    def executeInsertFiles(self):
-        """Insert collection with new file datasets into table."""
+    def executeInsertUpdateFiles(self):
+        """Insert or update collection with new file datasets into table."""
         try:
-            self._db[1].executemany(self._insertCmd, self._dataSets)
+            inserts = [i for (rowID, i) in self._dataSets if rowID == -1]
+            updates = [i for (rowID, i) in self._dataSets if rowID != -1]
+
+            if len(inserts) > 0:
+                self._db[1].executemany(self._insertCmd, inserts)
+            if len(updates) > 0:
+                self._db[1].executemany(self._updateCmd, updates)
             self._db[0].commit()
         except Exception as e:
             # ignore invalid data
