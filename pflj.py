@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/15/2023"
 
 """List jpg files in a directory and its sub-directories,
 and print results including jpg tags to stdout or save as a CSV file
@@ -28,8 +28,8 @@ import pfllib.pflrun as pflrun
 class PFLParamsJPG(pflparams.PFLParams):
     """Class with fixed search pattern '*.jpg'."""
 
-    def __init__(self, scandir, recurse, outfile, outexistsmode, nodots):
-        super().__init__("*.jpg", scandir, recurse, outfile, outexistsmode, nodots)
+    def __init__(self, args):
+        super().__init__(args, fixpattern="*.jpg")
 
 
 class PFLRunJPG(pflrun.PFLRun):
@@ -105,14 +105,7 @@ args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParamsJPG(
-        args.scandir,
-        args.recurse,
-        args.outfile,
-        args.overwrite + args.append,
-        args.nodots,
-        args.dots,
-    )
+    params = PFLParamsJPG(args)
 
     print("Search for jpg files in directory '{}'...".format(params.ScanPath))
 

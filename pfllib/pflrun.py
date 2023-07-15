@@ -4,7 +4,7 @@ __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
 __version__ = "0.1.1"
-__date__ = "07/14/2023"
+__date__ = "07/15/2023"
 
 """Class PFLRun defines the basic file listing behaviour.
 It takes an PFLParams object and performs a search for files,
@@ -51,8 +51,8 @@ class PFLRun:
         self._countFiles = 0
 
         self.createpflout()
-^
-		# set start time after possible user interaction in createpflout
+
+        # set start time after possible user interaction in createpflout
         startTime = time.time()
 
         try:

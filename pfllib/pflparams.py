@@ -21,21 +21,27 @@ class PFLParams:
     and a file for result output, and additional attribute for stdout usage.
     """
 
-    def __init__(self, pattern, scandir, recurse, outfile, outexistsmode, nodots, dots):
+    def __init__(self, args, fixpattern=None):
         """Initialize the object from commandline arguments."""
-        self._Pattern = pattern
-        self._ScanDir = scandir
-        self._Recurse = recurse
-        self._OutFile = outfile
-        self._UseStdOut = outfile is None
+        if fixpattern is None:
+            try:
+                self._Pattern = args.pattern
+            except:
+                self._Pattern = "*.*"
+        else:
+            self._Pattern = fixpattern
+        self._ScanDir = args.scandir
+        self._Recurse = args.recurse
+        self._OutFile = args.outfile
+        self._UseStdOut = args.outfile is None
         if not self._UseStdOut:
-            self._OutFileType = 0 if str(outfile).lower().endswith(".csv") else 1
+            self._OutFileType = 0 if str(args.outfile).lower().endswith(".csv") else 1
         else:
             self._OutFileType = None
-        self._OutExistsMode = outexistsmode
-        self._ShowDots = not self._UseStdOut and not nodots
+        self._OutExistsMode = args.overwrite + args.append
+        self._ShowDots = not self._UseStdOut and not args.nodots
         if self._ShowDots:
-            self._FilesPerDot = pow(10, dots)
+            self._FilesPerDot = pow(10, args.dots)
         else:
             self._FilesPerDot = 0
         self.IsValid()

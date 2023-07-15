@@ -49,13 +49,9 @@ class PFLArgParseWUserPatternAndLimit(pflargparse.PFLArgParseWUserPattern):
 class PFLParamsWithLimit(pflparams.PFLParams):
     """Parameter class with additional file hash size limit."""
 
-    def __init__(
-        self, pattern, scandir, recurse, outfile, outexistsmode, nodots, dots, limit
-    ):
-        super().__init__(
-            pattern, scandir, recurse, outfile, outexistsmode, nodots, dots
-        )
-        self._IsLimited = limit
+    def __init__(self, args):
+        super().__init__(args)
+        self._IsLimited = args.limit
 
     def getIsLimited(
         self, doc="Return true if the file size for hashing will be limited"
@@ -156,16 +152,7 @@ args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParamsWithLimit(
-        args.pattern,
-        args.scandir,
-        args.recurse,
-        args.outfile,
-        args.overwrite + args.append,
-        args.nodots,
-        args.dots,
-        args.limit,
-    )
+    params = PFLParamsWithLimit(args)
 
     print(
         "Search for files matching '{0}' in directory '{1}'...".format(

@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.1.0"
-__date__ = "07/09/2023"
+__version__ = "0.1.1"
+__date__ = "07/15/2023"
 
 """List mp4 files in a directory and its sub-directories,
 and print results including mp4 tags to stdout or save as a CSV file
@@ -26,8 +26,8 @@ import pfllib.pflrun as pflrun
 class PFLParamsMP4(pflparams.PFLParams):
     """Class with fixed search pattern '*.mp4'."""
 
-    def __init__(self, scandir, recurse, outfile, outexistsmode, nodots):
-        super().__init__("*.mp4", scandir, recurse, outfile, outexistsmode, nodots)
+    def __init__(self, args):
+        super().__init__(args, fixpattern="*.mp4")
 
 
 class PFLRunMP4(pflrun.PFLRun):
@@ -110,14 +110,7 @@ args = parser.parse_args()
 
 try:
     # create parameter object
-    params = PFLParamsMP4(
-        args.scandir,
-        args.recurse,
-        args.outfile,
-        args.overwrite + args.append,
-        args.nodots,
-        args.dots,
-    )
+    params = PFLParamsMP4(args)
 
     print("Search for mp4 files in directory '{}'...".format(params.ScanPath))
 
