@@ -9,6 +9,9 @@ __date__ = "07/14/2023"
 """Class handles output of matching file search results to SQLite database.
 """
 
+# standard imports
+from datetime import datetime
+
 # local imports
 import pfllib.pflout as pflout
 import pfllib.pfsql as pfsql
@@ -30,18 +33,49 @@ class PFLOutSqlite(pflout.PFLOutFile):
         self._db = pfsql.opendb(self._filePath)
         if mode == "w":
             try:
+                # drop filelist table first as it references dirlist
                 pfsql.droptable(self._db, "filelist")
                 pfsql.droptable(self._db, "dirlist")
             except Exception:
                 pass
 
-        pfsql.createtable(self._db, "dirlist", ["id INTEGER PRIMARY KEY", "path"])
+        pfsql.createtable(self._db, "dirlist", ["id INTEGER PRIMARY KEY", "path"], True)
         self._currentPathID = self.insertPath(self._basePath)
         self._currentPath = None
 
         self._columnNames[0] += " REFERENCES dirlist(id)"
-        pfsql.createtable(self._db, "filelist", self._columnNames)
+        pfsql.createtable(self._db, "filelist", self._columnNames, True)
         self._dataSets = []
+
+    def writeStats(self, params):
+        pfsql.createtable(
+            self._db,
+            "stats",
+            [
+                "id INTEGER PRIMARY KEY",
+                "timestamp",
+                "scanpath",
+                "pattern",
+                "recurse",
+                "filecount",
+                "duration",
+            ],
+            True,
+        )
+        self._statrowID = pfsql.insertidrow(
+            self._db,
+            "stats",
+            "?, ?, ?, ?, ?, ?, ?",
+            (
+                None,
+                datetime.now(),
+                str(params.ScanPath),
+                params.Pattern,
+                params.Recurse,
+                None,
+                None,
+            ),
+        )
 
     def writeMatch(self, formattedList):
         if not formattedList[0] == self._currentPath:
@@ -60,18 +94,22 @@ class PFLOutSqlite(pflout.PFLOutFile):
         if len(self._dataSets) > 0:
             self.executeInsertFiles()
 
+    def updateStats(self, countFiles, duration):
+        pfsql.updaterow(
+            self._db,
+            "stats",
+            "filecount = ?, duration = ?",
+            f"ID={self._statrowID}",
+            (countFiles, duration),
+        )
+
     def close(self):
         if self._db is not None:
             pfsql.closedb(self._db)
 
     def insertPath(self, newPath):
-        """Insert a new path entry into the dirlist table."""
-        insertPathCmd = "INSERT INTO dirlist VALUES (?, ?)"
-        self._db[1].execute(insertPathCmd, (None, newPath))
-        self._db[0].commit()
-        queryPathIdCmd = "SELECT id FROM dirlist WHERE path = ?"
-        newrow = self._db[1].execute(queryPathIdCmd, (str(newPath),))
-        return newrow.fetchone()[0]
+        """Insert a new path entry into the dirlist table and return its row ID."""
+        return pfsql.insertidrow(self._db, "dirlist", "?, ?", (None, newPath))
 
     def executeInsertFiles(self):
         """Insert collection with new file datasets into table."""
