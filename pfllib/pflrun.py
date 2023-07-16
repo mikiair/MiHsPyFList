@@ -80,10 +80,9 @@ class PFLRun:
             duration = time.time() - startTime
 
             # close outfile
-            if self._pflout is not None:
-                if self._params.OutFileType == 1:
-                    self._pflout.updateStats(self._countFiles, duration)
-                self._pflout.close()
+            if self._params.OutFileType == 1:
+                self._pflout.updateStats(self._countFiles, duration)
+            self._pflout.close()
 
             print("Took {0:.2f} seconds.".format(duration))
 
@@ -104,34 +103,35 @@ class PFLRun:
         if self._params.UseStdOut:
             self._pflout = pflout.PFLOutStd()
             self._formatMatchList = self.formatListStrings
+            return
+        
+        print("Write results to {}".format(self._params.OutFilePath))
+
+        if self._params.OutExistsMode == "":
+            if self._params.OutFilePath.exists():
+                inputres = input("Output file already exists. Overwrite (Y/n)?")
+                if inputres != "" and inputres != "Y" and inputres != "y":
+                    sys.exit(0)
+            overwrite = "w"
         else:
-            print("Write results to {}".format(self._params.OutFilePath))
+            overwrite = self._params.OutExistsMode
 
-            if self._params.OutExistsMode == "":
-                if self._params.OutFilePath.exists():
-                    inputres = input("Output file already exists. Overwrite (Y/n)?")
-                    if inputres != "" and inputres != "Y" and inputres != "y":
-                        sys.exit(0)
-                overwrite = "w"
-            else:
-                overwrite = self._params.OutExistsMode
+        if self._params.OutFileType == 1:
+            self._pflout = pfloutsqlite.PFLOutSqlite(
+                self._params.OutFilePath, self._columns, self._params.ScanPath
+            )
+            self._formatMatchList = self.formatListDatabase
+        else:
+            self._pflout = pflout.PFLOutCSV(
+                self._params.OutFilePath,
+                self._columns,
+            )
+            self._formatMatchList = self.formatListStrings
 
-            if self._params.OutFileType == 1:
-                self._pflout = pfloutsqlite.PFLOutSqlite(
-                    self._params.OutFilePath, self._columns, self._params.ScanPath
-                )
-                self._formatMatchList = self.formatListDatabase
-            else:
-                self._pflout = pflout.PFLOutCSV(
-                    self._params.OutFilePath,
-                    self._columns,
-                )
-                self._formatMatchList = self.formatListStrings
+        self._pflout.openout(overwrite)
 
-            self._pflout.openout(overwrite)
-
-            if self._params.OutFileType == 1:
-                self._pflout.writeStats(self._params)
+        if self._params.OutFileType == 1:
+            self._pflout.writeStats(self._params)
 
     def matchFilesImmediate(self):
         # use glob iterator to immediately handle results
