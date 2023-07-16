@@ -3,8 +3,8 @@
 __author__ = "Michael Heise"
 __copyright__ = "Copyright (C) 2023 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.2.0"
-__date__ = "07/15/2023"
+__version__ = "0.2.1"
+__date__ = "07/16/2023"
 
 """Class handles output of matching file search results to SQLite database.
 """
@@ -67,7 +67,8 @@ class PFLOutSqlite(pflout.PFLOutFile):
             self._db, "filelist", self._columnNames, True, "UNIQUE(path, filename)"
         )
 
-        pfsql.updaterow(self._db, "filelist", "status = ?", None, (0,))
+        # set all row's file status to -1 (=deleted)
+        pfsql.updaterow(self._db, "filelist", "status = ?", None, (-1,))
 
     def writeStats(self, params):
         """Create statistics table if not existing and append a new row."""
@@ -88,7 +89,7 @@ class PFLOutSqlite(pflout.PFLOutFile):
         self._statrowID = pfsql.insertidrow(
             self._db,
             "stats",
-            "?, ?, ?, ?, ?, ?, ?",
+            (7 * "?, ").strip(", "),
             (
                 None,
                 datetime.now(),
@@ -114,13 +115,14 @@ class PFLOutSqlite(pflout.PFLOutFile):
         )
 
         formattedList[0] = self._currentPathID
-        formattedList.append(1)
 
         if fileID is None:
-            formattedList.append(None)
+            # append status "1" for new file and None for empty ID
+            formattedList.extend([1, None])
             self._dataSets.append([-1, formattedList])
         else:
-            formattedList.append(fileID[0])
+            # append status "0" for previously existing file and its ID
+            formattedList.extend([0, fileID[0]])
             self._dataSets.append([fileID[0], formattedList])
 
         if len(self._dataSets) == 50:
