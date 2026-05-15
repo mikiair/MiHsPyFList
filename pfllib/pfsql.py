@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 __author__ = "Michael Heise"
-__copyright__ = "Copyright (C) 2023 by Michael Heise"
+__copyright__ = "Copyright (C) 2023-2026 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.0.2"
-__date__ = "07/15/2023"
+__version__ = "0.2.1"
+__date__ = "05/15/2026"
 
 """Module with SQLite helper functions (copied from MiHsPyFSync/pfslib).
 """

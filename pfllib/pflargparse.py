@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 __author__ = "Michael Heise"
-__copyright__ = "Copyright (C) 2023 by Michael Heise"
+__copyright__ = "Copyright (C) 2023-2026 by Michael Heise"
 __license__ = "LGPL"
-__version__ = "0.2.0"
-__date__ = "07/15/2023"
+__version__ = "0.2.1"
+__date__ = "05/15/2026"
 
 """Classes in PFLArgParse derive from ArgumentParser and define different argument
 parsers with a set of default arguments for file listings
@@ -22,7 +22,7 @@ class PFLArgParseOptionalPattern(ArgumentParser):
     """
 
     def __init__(self, description, withPattern):
-        super().__init__(description)
+        super().__init__(description=description)
         self.add_argument(
             "-r",
             "--recurse",
