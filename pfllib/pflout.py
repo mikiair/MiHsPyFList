@@ -70,7 +70,7 @@ class PFLOutCSV(PFLOutFile):
         self._outFile = None
 
     def openout(self, mode):
-        self._outFile = open(self._filePath, mode, newline="")
+        self._outFile = open(self._filePath, mode, newline="", encoding="UTF-8")
         self._csvWriter = csv.writer(self._outFile, dialect="excel-tab", delimiter=";")
         self._csvWriter.writerow(self._columnNames)
 
